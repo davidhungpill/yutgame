@@ -311,13 +311,22 @@ input:focus, textarea:focus, select:focus { border-color: var(--orange); box-sha
 
 .special-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: 14px;
 }
-.special-actions .button {
+.special-actions .button,
+.special-actions .import-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
   padding: 11px 10px;
   font-size: .88rem;
+  text-align: center;
+}
+.special-actions .import-button {
+  margin-top: 0;
 }
 
 .modal[hidden] { display: none; }

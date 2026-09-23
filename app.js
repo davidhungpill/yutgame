@@ -62,6 +62,8 @@ const elements = {
   saveSpecialConfig: $("save-special-config"),
   loadSpecialConfig: $("load-special-config"),
   clearSpecialConfig: $("clear-special-config"),
+  exportSpecialConfig: $("export-special-config"),
+  importSpecialConfig: $("import-special-config"),
   podium: $("podium"),
   rankingList: $("ranking-list"),
   backToBoard: $("back-to-board"),
@@ -104,6 +106,15 @@ function serializeSpecialCells() {
   return [...state.specialCells.values()].sort((a, b) => a.cell - b.cell);
 }
 
+function createSpecialConfigPayload() {
+  return {
+    schema: "ieum-yutgame-special-cells-v1",
+    exportedAt: new Date().toISOString(),
+    boardSize: BOARD_SIZE,
+    specialCells: serializeSpecialCells(),
+  };
+}
+
 function normalizeSpecialCell(entry) {
   const cell = Number(entry?.cell);
   const title = String(entry?.title ?? "").trim();
@@ -115,11 +126,8 @@ function normalizeSpecialCell(entry) {
 
 function saveSpecialConfigToStorage() {
   try {
-    const payload = {
-      savedAt: new Date().toISOString(),
-      boardSize: BOARD_SIZE,
-      specialCells: serializeSpecialCells(),
-    };
+    const payload = createSpecialConfigPayload();
+    payload.savedAt = payload.exportedAt;
     localStorage.setItem(SPECIAL_STORAGE_KEY, JSON.stringify(payload));
     announceSpecial(`특별 칸 ${payload.specialCells.length}개 설정을 이 브라우저에 저장했습니다.`);
   } catch (error) {
@@ -155,6 +163,53 @@ function clearSpecialConfigStorage() {
   } catch (error) {
     announceSpecial("저장본을 삭제하지 못했습니다. 브라우저 설정을 확인하세요.");
   }
+}
+
+function applySpecialConfigPayload(payload, sourceLabel) {
+  const loaded = Array.isArray(payload?.specialCells)
+    ? payload.specialCells.map(normalizeSpecialCell).filter(Boolean)
+    : [];
+  state.specialCells = new Map(loaded.map((entry) => [entry.cell, entry]));
+  renderBoard();
+  renderSpecialList();
+  announceSpecial(`${sourceLabel}에서 특별 칸 ${loaded.length}개를 불러왔습니다.`);
+}
+
+function exportSpecialConfigToJson() {
+  const payload = createSpecialConfigPayload();
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `yutgame-special-cells-${date}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  announceSpecial(`특별 칸 ${payload.specialCells.length}개 설정을 JSON 파일로 내보냈습니다.`);
+}
+
+function importSpecialConfigFromJson(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    try {
+      const payload = JSON.parse(String(reader.result ?? ""));
+      applySpecialConfigPayload(payload, file.name);
+    } catch (error) {
+      announceSpecial("JSON 파일을 불러오지 못했습니다. 파일 형식을 확인하세요.");
+    } finally {
+      event.target.value = "";
+    }
+  });
+  reader.addEventListener("error", () => {
+    announceSpecial("JSON 파일을 읽지 못했습니다. 다시 시도하세요.");
+    event.target.value = "";
+  });
+  reader.readAsText(file, "utf-8");
 }
 
 function openSpecialModal({ cell, title, description }) {
@@ -525,6 +580,8 @@ function bindEvents() {
   elements.saveSpecialConfig.addEventListener("click", saveSpecialConfigToStorage);
   elements.loadSpecialConfig.addEventListener("click", loadSpecialConfigFromStorage);
   elements.clearSpecialConfig.addEventListener("click", clearSpecialConfigStorage);
+  elements.exportSpecialConfig.addEventListener("click", exportSpecialConfigToJson);
+  elements.importSpecialConfig.addEventListener("change", importSpecialConfigFromJson);
   elements.backToBoard.addEventListener("click", restartPositionsOnly);
   elements.resetGame.addEventListener("click", resetGame);
   elements.specialModalClose.addEventListener("click", closeSpecialModal);
