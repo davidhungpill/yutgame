@@ -1,4 +1,5 @@
 const BOARD_SIZE = 50;
+const SPECIAL_STORAGE_KEY = "ieum-yutgame-special-cells-v1";
 
 const BOARD_PATH = Array.from({ length: BOARD_SIZE }, (_, index) => {
   const cell = index + 1;
@@ -58,6 +59,9 @@ const elements = {
   specialDescription: $("special-description"),
   specialColor: $("special-color"),
   specialList: $("special-list"),
+  saveSpecialConfig: $("save-special-config"),
+  loadSpecialConfig: $("load-special-config"),
+  clearSpecialConfig: $("clear-special-config"),
   podium: $("podium"),
   rankingList: $("ranking-list"),
   backToBoard: $("back-to-board"),
@@ -94,6 +98,63 @@ function announce(message, type = "info") {
 
 function announceSpecial(message) {
   elements.specialMessage.textContent = message;
+}
+
+function serializeSpecialCells() {
+  return [...state.specialCells.values()].sort((a, b) => a.cell - b.cell);
+}
+
+function normalizeSpecialCell(entry) {
+  const cell = Number(entry?.cell);
+  const title = String(entry?.title ?? "").trim();
+  const description = String(entry?.description ?? "").trim();
+  const color = ["mission", "bonus", "penalty", "event", "purple"].includes(entry?.color) ? entry.color : "mission";
+  if (!Number.isInteger(cell) || cell < 1 || cell > BOARD_SIZE || !title || !description) return null;
+  return { cell, title: title.slice(0, 10), description: description.slice(0, 80), color };
+}
+
+function saveSpecialConfigToStorage() {
+  try {
+    const payload = {
+      savedAt: new Date().toISOString(),
+      boardSize: BOARD_SIZE,
+      specialCells: serializeSpecialCells(),
+    };
+    localStorage.setItem(SPECIAL_STORAGE_KEY, JSON.stringify(payload));
+    announceSpecial(`특별 칸 ${payload.specialCells.length}개 설정을 이 브라우저에 저장했습니다.`);
+  } catch (error) {
+    announceSpecial("브라우저 저장소에 저장하지 못했습니다. 저장 공간 또는 브라우저 설정을 확인하세요.");
+  }
+}
+
+function loadSpecialConfigFromStorage() {
+  try {
+    const raw = localStorage.getItem(SPECIAL_STORAGE_KEY);
+    if (!raw) {
+      announceSpecial("저장된 특별 칸 설정이 없습니다.");
+      return;
+    }
+    const payload = JSON.parse(raw);
+    const loaded = Array.isArray(payload?.specialCells)
+      ? payload.specialCells.map(normalizeSpecialCell).filter(Boolean)
+      : [];
+    state.specialCells = new Map(loaded.map((entry) => [entry.cell, entry]));
+    renderBoard();
+    renderSpecialList();
+    const savedDate = payload?.savedAt ? new Date(payload.savedAt).toLocaleString("ko-KR") : "저장일시 없음";
+    announceSpecial(`저장된 특별 칸 ${loaded.length}개를 불러왔습니다. (${savedDate})`);
+  } catch (error) {
+    announceSpecial("저장된 특별 칸 설정을 불러오지 못했습니다. 저장 데이터가 손상되었을 수 있습니다.");
+  }
+}
+
+function clearSpecialConfigStorage() {
+  try {
+    localStorage.removeItem(SPECIAL_STORAGE_KEY);
+    announceSpecial("브라우저에 저장된 특별 칸 설정을 삭제했습니다. 현재 화면의 설정은 유지됩니다.");
+  } catch (error) {
+    announceSpecial("저장본을 삭제하지 못했습니다. 브라우저 설정을 확인하세요.");
+  }
 }
 
 function openSpecialModal({ cell, title, description }) {
@@ -395,7 +456,7 @@ function renderSelectedPlayer() {
 
 function renderSpecialList() {
   elements.specialList.innerHTML = "";
-  const specials = [...state.specialCells.values()].sort((a, b) => a.cell - b.cell);
+  const specials = serializeSpecialCells();
   if (specials.length === 0) {
     elements.specialList.innerHTML = `<li class="muted">등록된 특별 칸이 없습니다.</li>`;
     return;
@@ -461,6 +522,9 @@ function bindEvents() {
   elements.startGame.addEventListener("click", startGame);
   elements.finishGame.addEventListener("click", finishGame);
   elements.specialForm.addEventListener("submit", saveSpecialCell);
+  elements.saveSpecialConfig.addEventListener("click", saveSpecialConfigToStorage);
+  elements.loadSpecialConfig.addEventListener("click", loadSpecialConfigFromStorage);
+  elements.clearSpecialConfig.addEventListener("click", clearSpecialConfigStorage);
   elements.backToBoard.addEventListener("click", restartPositionsOnly);
   elements.resetGame.addEventListener("click", resetGame);
   elements.specialModalClose.addEventListener("click", closeSpecialModal);
