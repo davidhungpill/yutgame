@@ -263,7 +263,8 @@ function renderBoardScenery() {
 }
 
 function renderBoard() {
-  elements.board.innerHTML = renderBoardScenery();
+  elements.board.innerHTML = `<div class="board-canvas">${renderBoardScenery()}</div>`;
+  const boardCanvas = elements.board.querySelector(".board-canvas");
   boardCellsInPathOrder().forEach(({ cell: cellNumber, x, y, rotate }) => {
     const cell = document.createElement("button");
     const special = state.specialCells.get(cellNumber);
@@ -288,7 +289,7 @@ function renderBoard() {
     `;
     const tokenArea = cell.querySelector(".cell__tokens");
     playersHere.forEach((player) => tokenArea.appendChild(createToken(player)));
-    elements.board.appendChild(cell);
+    boardCanvas.appendChild(cell);
   });
 }
 
