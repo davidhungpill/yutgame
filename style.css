@@ -247,17 +247,17 @@ input:focus, textarea:focus, select:focus { border-color: var(--orange); box-sha
   font-weight: 1000;
   letter-spacing: .04em;
 }
-.board-label--start { left: 36px; bottom: 22px; }
-.board-label--end { right: 34px; top: 26px; color: #b45309; }
+.board-label--start { left: 34px; bottom: 18px; }
+.board-label--end { right: 34px; top: 18px; color: #b45309; }
 .scenery { position: absolute; z-index: 1; pointer-events: none; filter: drop-shadow(0 5px 0 rgba(91,33,18,.24)); }
-.scenery--moon { left: 312px; top: 434px; font-size: 7.2rem; }
-.scenery--rabbit { left: 218px; bottom: 112px; font-size: 4.4rem; transform: rotate(-8deg); }
-.scenery--kite-one { left: 572px; top: 120px; font-size: 5rem; transform: rotate(-14deg); }
-.scenery--kite-two { right: 126px; top: 222px; font-size: 4.2rem; transform: rotate(18deg); }
-.scenery--rice-one { left: 656px; bottom: 32px; font-size: 4.4rem; }
-.scenery--rice-two { right: 216px; bottom: 74px; font-size: 5rem; transform: rotate(12deg); }
-.scenery--drum { left: 566px; top: 306px; font-size: 4.3rem; }
-.scenery--songpyeon { right: 154px; bottom: 250px; font-size: 4rem; }
+.scenery--moon { left: 530px; top: 318px; font-size: 6.4rem; opacity: .78; }
+.scenery--rabbit { left: 126px; bottom: 28px; font-size: 4rem; transform: rotate(-8deg); }
+.scenery--kite-one { left: 596px; top: 34px; font-size: 4.4rem; transform: rotate(-14deg); }
+.scenery--kite-two { right: 118px; top: 296px; font-size: 4rem; transform: rotate(18deg); }
+.scenery--rice-one { left: 560px; bottom: 18px; font-size: 4rem; }
+.scenery--rice-two { right: 186px; bottom: 36px; font-size: 4.4rem; transform: rotate(12deg); }
+.scenery--drum { left: 44px; top: 300px; font-size: 4rem; }
+.scenery--songpyeon { right: 44px; bottom: 286px; font-size: 3.8rem; }
 .cell {
   --rotate: 0deg;
   position: absolute;
