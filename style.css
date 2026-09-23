@@ -309,6 +309,78 @@ input:focus, textarea:focus, select:focus { border-color: var(--orange); box-sha
 .special-item strong { display: block; }
 .special-item span { color: var(--muted); font-size: .88rem; }
 
+.modal[hidden] { display: none; }
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(67, 20, 7, .58);
+  backdrop-filter: blur(3px);
+}
+.modal__card {
+  position: relative;
+  z-index: 1;
+  width: min(520px, 100%);
+  padding: 30px;
+  border: 5px solid #f59e0b;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 90% 8%, rgba(254, 243, 199, .95) 0 54px, transparent 56px),
+    linear-gradient(145deg, #fff7ed, #ffffff);
+  box-shadow: 0 22px 0 rgba(91, 33, 18, .45), 0 34px 60px rgba(67, 20, 7, .36);
+  text-align: center;
+  animation: modal-pop .16s ease-out;
+}
+.modal__card::before {
+  content: "🎯";
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: -4px auto 10px;
+  border-radius: 50%;
+  background: #fef3c7;
+  border: 3px solid #f59e0b;
+  font-size: 2rem;
+}
+.modal__close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 1.8rem;
+  font-weight: 900;
+  line-height: 1;
+}
+.modal__description {
+  margin: 14px 0 18px;
+  padding: 18px;
+  border-radius: 20px;
+  background: #fffbeb;
+  border: 2px dashed #f59e0b;
+  color: #7c2d12;
+  font-size: 1.12rem;
+  font-weight: 800;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+@keyframes modal-pop {
+  from { opacity: 0; transform: translateY(10px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .result-panel { text-align: center; padding: 34px; max-width: 920px; margin: 0 auto; }
 .podium { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 24px 0; }
 .medal-card { padding: 18px; border-radius: 24px; border: 3px solid #fed7aa; background: #fff; box-shadow: 0 8px 0 #fed7aa; }

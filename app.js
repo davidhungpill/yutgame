@@ -62,6 +62,12 @@ const elements = {
   rankingList: $("ranking-list"),
   backToBoard: $("back-to-board"),
   resetGame: $("reset-game"),
+  specialModal: $("special-modal"),
+  specialModalCell: $("special-modal-cell"),
+  specialModalTitle: $("special-modal-title"),
+  specialModalDescription: $("special-modal-description"),
+  specialModalClose: $("special-modal-close"),
+  specialModalConfirm: $("special-modal-confirm"),
 };
 
 function showScreen(screen) {
@@ -88,6 +94,20 @@ function announce(message, type = "info") {
 
 function announceSpecial(message) {
   elements.specialMessage.textContent = message;
+}
+
+function openSpecialModal({ cell, title, description }) {
+  elements.specialModalCell.textContent = `${cell}번 특별 칸`;
+  elements.specialModalTitle.textContent = title;
+  elements.specialModalDescription.textContent = description;
+  elements.specialModal.hidden = false;
+  elements.specialModal.classList.add("modal--open");
+  elements.specialModalConfirm.focus();
+}
+
+function closeSpecialModal() {
+  elements.specialModal.classList.remove("modal--open");
+  elements.specialModal.hidden = true;
 }
 
 function addPlayer(name) {
@@ -152,7 +172,8 @@ function moveSelectedPlayer(targetCell) {
   } else {
     const special = state.specialCells.get(destination);
     if (special) {
-      announce(`🎉 <strong>${player.name}</strong>님이 <strong>${destination}번 ${escapeHtml(special.title)}</strong>에 도착했습니다.<br>${escapeHtml(special.description)}`, "special");
+      announce(`${player.name}님이 ${destination}번 특별 칸에 도착했습니다. 팝업 내용을 확인하세요.`, "special");
+      openSpecialModal(special);
     } else {
       announce(`${player.name}님이 ${destination}번 칸으로 이동했습니다.`);
     }
@@ -442,6 +463,14 @@ function bindEvents() {
   elements.specialForm.addEventListener("submit", saveSpecialCell);
   elements.backToBoard.addEventListener("click", restartPositionsOnly);
   elements.resetGame.addEventListener("click", resetGame);
+  elements.specialModalClose.addEventListener("click", closeSpecialModal);
+  elements.specialModalConfirm.addEventListener("click", closeSpecialModal);
+  elements.specialModal.addEventListener("click", (event) => {
+    if (event.target.matches("[data-close-modal]")) closeSpecialModal();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !elements.specialModal.hidden) closeSpecialModal();
+  });
 }
 
 bindEvents();
