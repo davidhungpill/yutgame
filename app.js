@@ -1,4 +1,17 @@
 const BOARD_SIZE = 50;
+
+const BOARD_PATH = [
+  [1, 150, 660, -8], [2, 245, 642, -4], [3, 340, 642, 2], [4, 432, 612, 18], [5, 485, 535, 84],
+  [6, 465, 445, -18], [7, 365, 422, 0], [8, 265, 424, 0], [9, 168, 408, -8], [10, 105, 340, 80],
+  [11, 105, 252, 90], [12, 108, 164, 84], [13, 165, 94, -18], [14, 270, 76, 0], [15, 378, 76, 0],
+  [16, 485, 104, 28], [17, 525, 188, 88], [18, 524, 276, 84], [19, 568, 352, -10], [20, 672, 352, 0],
+  [21, 778, 346, -6], [22, 850, 288, 84], [23, 850, 198, 88], [24, 898, 116, -8], [25, 1006, 100, 0],
+  [26, 1112, 122, 22], [27, 1156, 206, 86], [28, 1152, 296, 88], [29, 1112, 380, -14], [30, 1008, 396, 0],
+  [31, 900, 396, 0], [32, 792, 400, 2], [33, 688, 418, -10], [34, 652, 500, 88], [35, 652, 590, 88],
+  [36, 708, 662, -14], [37, 812, 668, 0], [38, 918, 666, 2], [39, 1006, 620, -68], [40, 1026, 532, 88],
+  [41, 1074, 456, -14], [42, 1170, 452, 0], [43, 1218, 372, 86], [44, 1218, 282, 88], [45, 1218, 192, 88],
+  [46, 1184, 108, -24], [47, 1084, 72, 0], [48, 984, 72, 0], [49, 884, 78, 8], [50, 792, 104, 18],
+].map(([cell, x, y, rotate]) => ({ cell, x, y, rotate }));
 const PLAYER_COLORS = ["#ef4444", "#3b82f6", "#22c55e", "#a855f7", "#f97316", "#14b8a6", "#eab308", "#ec4899", "#6366f1", "#84cc16"];
 const SPECIAL_ICONS = {
   mission: "⭐",
@@ -216,24 +229,40 @@ function restartPositionsOnly() {
   announce("보드 화면으로 돌아왔습니다.");
 }
 
-function boardCellsInSnakeOrder() {
-  const result = [];
-  for (let row = 0; row < 5; row += 1) {
-    const start = row * 10 + 1;
-    const rowCells = Array.from({ length: 10 }, (_, index) => start + index);
-    if (row % 2 === 1) rowCells.reverse();
-    result.push(...rowCells);
-  }
-  return result;
+function boardCellsInPathOrder() {
+  return BOARD_PATH;
+}
+
+function renderBoardScenery() {
+  const points = BOARD_PATH.map((point) => `${point.x},${point.y}`).join(" ");
+  return `
+    <svg class="board-track" viewBox="0 0 1280 760" aria-hidden="true" focusable="false">
+      <polyline class="board-track__shadow" points="${points}" />
+      <polyline class="board-track__line" points="${points}" />
+    </svg>
+    <div class="board-label board-label--start">START</div>
+    <div class="board-label board-label--end">END</div>
+    <div class="scenery scenery--sun">☀️</div>
+    <div class="scenery scenery--moon">🌙</div>
+    <div class="scenery scenery--rainbow">🌈</div>
+    <div class="scenery scenery--cloud-one">☁️</div>
+    <div class="scenery scenery--cloud-two">☁️</div>
+    <div class="scenery scenery--star-one">⭐</div>
+    <div class="scenery scenery--star-two">✦</div>
+    <div class="scenery scenery--star-three">✦</div>
+  `;
 }
 
 function renderBoard() {
-  elements.board.innerHTML = "";
-  boardCellsInSnakeOrder().forEach((cellNumber) => {
+  elements.board.innerHTML = renderBoardScenery();
+  boardCellsInPathOrder().forEach(({ cell: cellNumber, x, y, rotate }) => {
     const cell = document.createElement("button");
     const special = state.specialCells.get(cellNumber);
     cell.type = "button";
     cell.className = "cell";
+    cell.style.left = `${x}px`;
+    cell.style.top = `${y}px`;
+    cell.style.setProperty("--rotate", `${rotate}deg`);
     if (cellNumber === 1) cell.classList.add("start");
     if (cellNumber === BOARD_SIZE) cell.classList.add("finish");
     if (special) cell.classList.add(`special-${special.color}`);
