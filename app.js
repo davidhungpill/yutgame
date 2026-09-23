@@ -5,9 +5,11 @@ const BOARD_PATH = Array.from({ length: BOARD_SIZE }, (_, index) => {
   const row = Math.floor(index / 10);
   const colInRow = index % 10;
   const col = row % 2 === 0 ? colInRow : 9 - colInRow;
-  const x = 112 + col * 116;
-  const y = 110 + row * 132;
-  const rotate = row % 2 === 0 ? (col % 2 === 0 ? -3 : 3) : (col % 2 === 0 ? 3 : -3);
+  const wave = Math.sin((col / 9) * Math.PI);
+  const rowWave = row % 2 === 0 ? -10 : 10;
+  const x = 150 + col * 108;
+  const y = 635 - row * 138 + wave * rowWave;
+  const rotate = row % 2 === 0 ? (col % 2 === 0 ? -5 : 4) : (col % 2 === 0 ? 5 : -4);
   return { cell, x, y, rotate };
 });
 const PLAYER_COLORS = ["#ef4444", "#3b82f6", "#22c55e", "#a855f7", "#f97316", "#14b8a6", "#eab308", "#ec4899", "#6366f1", "#84cc16"];
@@ -240,12 +242,28 @@ function boardCellsInPathOrder() {
   return BOARD_PATH;
 }
 
+function pointsToSmoothPath(points) {
+  if (points.length === 0) return "";
+  const [first, ...rest] = points;
+  let path = `M ${first.x} ${first.y}`;
+  for (let index = 0; index < rest.length; index += 1) {
+    const current = rest[index];
+    const previous = points[index];
+    const midX = (previous.x + current.x) / 2;
+    const midY = (previous.y + current.y) / 2;
+    path += ` Q ${previous.x} ${previous.y} ${midX} ${midY}`;
+  }
+  const last = points[points.length - 1];
+  path += ` T ${last.x} ${last.y}`;
+  return path;
+}
+
 function renderBoardScenery() {
-  const points = BOARD_PATH.map((point) => `${point.x},${point.y}`).join(" ");
+  const path = pointsToSmoothPath(BOARD_PATH);
   return `
     <svg class="board-track" viewBox="0 0 1280 760" aria-hidden="true" focusable="false">
-      <polyline class="board-track__shadow" points="${points}" />
-      <polyline class="board-track__line" points="${points}" />
+      <path class="board-track__shadow" d="${path}" />
+      <path class="board-track__line" d="${path}" />
     </svg>
     <div class="board-label board-label--start">출발</div>
     <div class="board-label board-label--end">도착</div>
