@@ -5,11 +5,13 @@ const BOARD_PATH = Array.from({ length: BOARD_SIZE }, (_, index) => {
   const row = Math.floor(index / 10);
   const colInRow = index % 10;
   const col = row % 2 === 0 ? colInRow : 9 - colInRow;
-  const wave = Math.sin((col / 9) * Math.PI);
-  const rowWave = row % 2 === 0 ? -10 : 10;
-  const x = 150 + col * 108;
-  const y = 635 - row * 138 + wave * rowWave;
-  const rotate = row % 2 === 0 ? (col % 2 === 0 ? -5 : 4) : (col % 2 === 0 ? 5 : -4);
+  const progress = col / 9;
+  const wave = Math.sin(progress * Math.PI);
+  const baseY = 650 - row * 150;
+  const rowWave = row % 2 === 0 ? -18 : 18;
+  const x = 220 + col * 94;
+  const y = baseY + wave * rowWave;
+  const rotate = row % 2 === 0 ? -8 + progress * 16 : 8 - progress * 16;
   return { cell, x, y, rotate };
 });
 const PLAYER_COLORS = ["#ef4444", "#3b82f6", "#22c55e", "#a855f7", "#f97316", "#14b8a6", "#eab308", "#ec4899", "#6366f1", "#84cc16"];
@@ -244,17 +246,22 @@ function boardCellsInPathOrder() {
 
 function pointsToSmoothPath(points) {
   if (points.length === 0) return "";
-  const [first, ...rest] = points;
-  let path = `M ${first.x} ${first.y}`;
-  for (let index = 0; index < rest.length; index += 1) {
-    const current = rest[index];
-    const previous = points[index];
-    const midX = (previous.x + current.x) / 2;
-    const midY = (previous.y + current.y) / 2;
-    path += ` Q ${previous.x} ${previous.y} ${midX} ${midY}`;
+  let path = `M ${points[0].x} ${points[0].y}`;
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const current = points[index];
+    const next = points[index + 1];
+    const row = Math.floor(index / 10);
+    const isRowEnd = (index + 1) % 10 === 0;
+    if (isRowEnd) {
+      const controlX = row % 2 === 0 ? current.x + 86 : current.x - 86;
+      const controlY = (current.y + next.y) / 2;
+      path += ` Q ${controlX} ${controlY} ${next.x} ${next.y}`;
+    } else {
+      const controlX = (current.x + next.x) / 2;
+      const controlY = Math.min(current.y, next.y) - (row % 2 === 0 ? 14 : -14);
+      path += ` Q ${controlX} ${controlY} ${next.x} ${next.y}`;
+    }
   }
-  const last = points[points.length - 1];
-  path += ` T ${last.x} ${last.y}`;
   return path;
 }
 

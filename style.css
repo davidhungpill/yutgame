@@ -247,17 +247,17 @@ input:focus, textarea:focus, select:focus { border-color: var(--orange); box-sha
   font-weight: 1000;
   letter-spacing: .04em;
 }
-.board-label--start { left: 36px; bottom: 18px; }
-.board-label--end { right: 38px; top: 18px; color: #b45309; }
+.board-label--start { left: 34px; bottom: 34px; }
+.board-label--end { right: 34px; top: 36px; color: #b45309; }
 .scenery { position: absolute; z-index: 1; pointer-events: none; filter: drop-shadow(0 5px 0 rgba(91,33,18,.24)); }
-.scenery--moon { left: 532px; top: 326px; font-size: 6.2rem; opacity: .72; }
-.scenery--rabbit { left: 126px; bottom: 28px; font-size: 4rem; transform: rotate(-8deg); }
-.scenery--kite-one { left: 596px; top: 24px; font-size: 4.2rem; transform: rotate(-14deg); }
+.scenery--moon { left: 544px; top: 322px; font-size: 6.2rem; opacity: .68; }
+.scenery--rabbit { left: 76px; bottom: 150px; font-size: 3.8rem; transform: rotate(-8deg); }
+.scenery--kite-one { left: 584px; top: 26px; font-size: 4.2rem; transform: rotate(-14deg); }
 .scenery--kite-two { right: 118px; top: 296px; font-size: 4rem; transform: rotate(18deg); }
-.scenery--rice-one { left: 566px; bottom: 16px; font-size: 3.8rem; }
-.scenery--rice-two { right: 186px; bottom: 36px; font-size: 4.4rem; transform: rotate(12deg); }
+.scenery--rice-one { left: 572px; bottom: 18px; font-size: 3.8rem; }
+.scenery--rice-two { right: 146px; bottom: 158px; font-size: 4.2rem; transform: rotate(12deg); }
 .scenery--drum { left: 44px; top: 300px; font-size: 4rem; }
-.scenery--songpyeon { right: 44px; bottom: 286px; font-size: 3.8rem; }
+.scenery--songpyeon { right: 54px; bottom: 300px; font-size: 3.6rem; }
 .cell {
   --rotate: 0deg;
   position: absolute;
