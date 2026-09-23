@@ -22,7 +22,7 @@ const SPECIAL_ICONS = {
 };
 
 const state = {
-  screen: "setup",
+  screen: "special",
   players: [],
   selectedPlayerId: null,
   specialCells: new Map(),
@@ -32,6 +32,7 @@ const state = {
 const $ = (id) => document.getElementById(id);
 
 const elements = {
+  specialSetupScreen: $("special-setup-screen"),
   setupScreen: $("setup-screen"),
   boardScreen: $("board-screen"),
   resultScreen: $("result-screen"),
@@ -47,6 +48,9 @@ const elements = {
   eventMessage: $("event-message"),
   finishGame: $("finish-game"),
   specialForm: $("special-form"),
+  specialMessage: $("special-message"),
+  continueToPlayers: $("continue-to-players"),
+  backToSpecial: $("back-to-special"),
   specialCell: $("special-cell"),
   specialTitle: $("special-title"),
   specialDescription: $("special-description"),
@@ -60,7 +64,8 @@ const elements = {
 
 function showScreen(screen) {
   state.screen = screen;
-  [elements.setupScreen, elements.boardScreen, elements.resultScreen].forEach((el) => el.classList.remove("screen--active"));
+  [elements.specialSetupScreen, elements.setupScreen, elements.boardScreen, elements.resultScreen].forEach((el) => el.classList.remove("screen--active"));
+  if (screen === "special") elements.specialSetupScreen.classList.add("screen--active");
   if (screen === "setup") elements.setupScreen.classList.add("screen--active");
   if (screen === "board") elements.boardScreen.classList.add("screen--active");
   if (screen === "result") elements.resultScreen.classList.add("screen--active");
@@ -77,6 +82,10 @@ function playerInitial(name) {
 function announce(message, type = "info") {
   elements.eventMessage.innerHTML = message;
   elements.eventMessage.dataset.type = type;
+}
+
+function announceSpecial(message) {
+  elements.specialMessage.textContent = message;
 }
 
 function addPlayer(name) {
@@ -163,22 +172,22 @@ function saveSpecialCell(event) {
   const color = elements.specialColor.value;
 
   if (!Number.isInteger(cell) || cell < 1 || cell > BOARD_SIZE) {
-    announce("특별 칸 번호는 1부터 50 사이로 입력하세요.", "warning");
+    announceSpecial("특별 칸 번호는 1부터 50 사이로 입력하세요.");
     return;
   }
   if (!title) {
-    announce("특별 칸 제목을 입력하세요.", "warning");
+    announceSpecial("특별 칸 제목을 입력하세요.");
     return;
   }
   if (!description) {
-    announce("특별 칸 설명을 입력하세요.", "warning");
+    announceSpecial("특별 칸 설명을 입력하세요.");
     return;
   }
 
   state.specialCells.set(cell, { cell, title, description, color });
   elements.specialForm.reset();
   elements.specialColor.value = "mission";
-  announce(`${cell}번 칸에 '${escapeHtml(title)}' 특별 칸을 저장했습니다.`, "success");
+  announceSpecial(`${cell}번 칸에 '${title}' 특별 칸을 저장했습니다.`);
   renderBoard();
   renderSpecialList();
 }
@@ -187,7 +196,7 @@ function removeSpecialCell(cell) {
   state.specialCells.delete(cell);
   renderBoard();
   renderSpecialList();
-  announce(`${cell}번 특별 칸을 삭제했습니다.`);
+  announceSpecial(`${cell}번 특별 칸을 삭제했습니다.`);
 }
 
 function startGame() {
@@ -212,7 +221,7 @@ function resetGame() {
   state.specialCells = new Map();
   state.finishOrder = [];
   elements.setupMessage.textContent = "";
-  showScreen("setup");
+  showScreen("special");
   renderAll();
 }
 
@@ -240,16 +249,16 @@ function renderBoardScenery() {
       <polyline class="board-track__shadow" points="${points}" />
       <polyline class="board-track__line" points="${points}" />
     </svg>
-    <div class="board-label board-label--start">START</div>
-    <div class="board-label board-label--end">END</div>
-    <div class="scenery scenery--sun">☀️</div>
-    <div class="scenery scenery--moon">🌙</div>
-    <div class="scenery scenery--rainbow">🌈</div>
-    <div class="scenery scenery--cloud-one">☁️</div>
-    <div class="scenery scenery--cloud-two">☁️</div>
-    <div class="scenery scenery--star-one">⭐</div>
-    <div class="scenery scenery--star-two">✦</div>
-    <div class="scenery scenery--star-three">✦</div>
+    <div class="board-label board-label--start">출발</div>
+    <div class="board-label board-label--end">도착</div>
+    <div class="scenery scenery--moon">🌕</div>
+    <div class="scenery scenery--rabbit">🐇</div>
+    <div class="scenery scenery--kite-one">🪁</div>
+    <div class="scenery scenery--kite-two">🪁</div>
+    <div class="scenery scenery--rice-one">🌾</div>
+    <div class="scenery scenery--rice-two">🌾</div>
+    <div class="scenery scenery--drum">🥁</div>
+    <div class="scenery scenery--songpyeon">🥮</div>
   `;
 }
 
@@ -402,6 +411,8 @@ function bindEvents() {
     event.preventDefault();
     addPlayer(elements.playerName.value);
   });
+  elements.continueToPlayers.addEventListener("click", () => showScreen("setup"));
+  elements.backToSpecial.addEventListener("click", () => showScreen("special"));
   elements.startGame.addEventListener("click", startGame);
   elements.finishGame.addEventListener("click", finishGame);
   elements.specialForm.addEventListener("submit", saveSpecialCell);
