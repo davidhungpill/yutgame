@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2026년 이음세대 윳놀이</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="hero__ornament" aria-hidden="true">✦</div>
+      <div>
+        <p class="eyebrow">함께 이어지는 보드게임</p>
+        <h1>2026년 이음세대 윳놀이</h1>
+        <p class="hero__copy">50칸 여정 위에서 참여자를 이동시키고, 특별 칸 미션을 운영하세요.</p>
+      </div>
+      <div class="hero__sticks" aria-hidden="true">╱╲ ╱╲</div>
+    </header>
+
+    <main>
+      <section id="setup-screen" class="screen screen--active" aria-labelledby="setup-title">
+        <div class="panel setup-grid">
+          <div class="setup-card">
+            <h2 id="setup-title">참여자 등록</h2>
+            <p class="muted">게임 시작 전 참여자 이름을 추가하세요. 최소 1명부터 시작할 수 있습니다.</p>
+            <form id="player-form" class="inline-form" autocomplete="off">
+              <label class="sr-only" for="player-name">참여자 이름</label>
+              <input id="player-name" type="text" maxlength="12" placeholder="참여자 이름" />
+              <button type="submit" class="button button--primary">참여자 추가</button>
+            </form>
+            <div id="setup-message" class="message" role="status"></div>
+          </div>
+
+          <div class="setup-card">
+            <div class="section-title-row">
+              <h2>등록된 참여자</h2>
+              <span id="player-count" class="pill">0명</span>
+            </div>
+            <ul id="setup-player-list" class="player-list player-list--setup"></ul>
+            <button id="start-game" class="button button--wide" type="button">게임 시작</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="board-screen" class="screen" aria-labelledby="board-title">
+        <div class="game-layout">
+          <aside class="side-panel">
+            <h2 id="board-title">참여자</h2>
+            <p class="muted">이동할 참여자를 선택한 뒤 보드 칸을 클릭하세요.</p>
+            <ul id="board-player-list" class="player-list"></ul>
+            <div class="selected-box">
+              <span class="label">선택됨</span>
+              <strong id="selected-player-name">없음</strong>
+            </div>
+            <button id="finish-game" class="button button--danger button--wide" type="button">게임 종료</button>
+          </aside>
+
+          <section class="board-panel" aria-label="50칸 보드게임판">
+            <div class="board-header">
+              <div>
+                <p class="eyebrow">START → FINISH</p>
+                <h2>이음 여정 보드</h2>
+              </div>
+              <div class="legend" aria-label="범례">
+                <span><i class="legend-dot normal"></i>일반</span>
+                <span><i class="legend-dot special"></i>특별 칸</span>
+                <span><i class="legend-dot finish"></i>도착</span>
+              </div>
+            </div>
+            <div class="board-scroll">
+              <div id="board" class="board"></div>
+            </div>
+            <div id="event-message" class="event-message" role="status">참여자를 선택하고 원하는 칸을 클릭하세요.</div>
+          </section>
+
+          <aside class="side-panel special-panel">
+            <h2>특별 칸 등록</h2>
+            <p class="muted">미션, 보너스, 벌칙 칸을 현장에서 자유롭게 추가할 수 있습니다.</p>
+            <form id="special-form" class="special-form" autocomplete="off">
+              <label>칸 번호
+                <input id="special-cell" type="number" min="1" max="50" placeholder="1~50" />
+              </label>
+              <label>제목
+                <input id="special-title" type="text" maxlength="10" placeholder="예: 미션" />
+              </label>
+              <label>설명
+                <textarea id="special-description" maxlength="80" placeholder="예: 노래 한 소절 부르기"></textarea>
+              </label>
+              <label>색상
+                <select id="special-color">
+                  <option value="mission">노랑 / 미션</option>
+                  <option value="bonus">초록 / 보너스</option>
+                  <option value="penalty">빨강 / 벌칙</option>
+                  <option value="event">파랑 / 이벤트</option>
+                  <option value="purple">보라 / 찬스</option>
+                </select>
+              </label>
+              <button type="submit" class="button button--primary button--wide">특별 칸 저장</button>
+            </form>
+            <h3>등록 목록</h3>
+            <ul id="special-list" class="special-list"></ul>
+          </aside>
+        </div>
+      </section>
+
+      <section id="result-screen" class="screen" aria-labelledby="result-title">
+        <div class="panel result-panel">
+          <p class="eyebrow">GAME RESULT</p>
+          <h2 id="result-title">2026년 이음세대 윳놀이 결과</h2>
+          <div id="podium" class="podium"></div>
+          <ol id="ranking-list" class="ranking-list"></ol>
+          <div class="result-actions">
+            <button id="back-to-board" class="button" type="button">보드로 돌아가기</button>
+            <button id="reset-game" class="button button--primary" type="button">처음부터 다시</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <template id="token-template">
+    <span class="player-token"></span>
+  </template>
+
+  <script src="./app.js"></script>
+</body>
+</html>
