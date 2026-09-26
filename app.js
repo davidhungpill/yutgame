@@ -1,5 +1,6 @@
 const BOARD_SIZE = 50;
 const SPECIAL_STORAGE_KEY = "ieum-yutgame-special-cells-v1";
+const SOUND_STORAGE_KEY = "ieum-yutgame-sound-v1";
 
 const BOARD_PATH = Array.from({ length: BOARD_SIZE }, (_, index) => {
   const cell = index + 1;
@@ -30,6 +31,14 @@ const state = {
   selectedPlayerId: null,
   specialCells: new Map(),
   finishOrder: [],
+  soundEnabled: true,
+  musicEnabled: false,
+};
+
+const audioState = {
+  context: null,
+  musicTimer: null,
+  musicStep: 0,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -64,6 +73,8 @@ const elements = {
   clearSpecialConfig: $("clear-special-config"),
   exportSpecialConfig: $("export-special-config"),
   importSpecialConfig: $("import-special-config"),
+  toggleSound: $("toggle-sound"),
+  toggleMusic: $("toggle-music"),
   podium: $("podium"),
   rankingList: $("ranking-list"),
   backToBoard: $("back-to-board"),
@@ -100,6 +111,119 @@ function announce(message, type = "info") {
 
 function announceSpecial(message) {
   elements.specialMessage.textContent = message;
+}
+
+function loadSoundPreferences() {
+  try {
+    const raw = localStorage.getItem(SOUND_STORAGE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    state.soundEnabled = saved.soundEnabled !== false;
+    state.musicEnabled = saved.musicEnabled === true;
+  } catch (error) {
+    state.soundEnabled = true;
+    state.musicEnabled = false;
+  }
+}
+
+function saveSoundPreferences() {
+  try {
+    localStorage.setItem(SOUND_STORAGE_KEY, JSON.stringify({
+      soundEnabled: state.soundEnabled,
+      musicEnabled: state.musicEnabled,
+    }));
+  } catch (error) {
+    // Sound preferences are non-critical. Ignore storage failures.
+  }
+}
+
+function updateSoundButtons() {
+  elements.toggleSound.textContent = state.soundEnabled ? "효과음 켜짐" : "효과음 꺼짐";
+  elements.toggleSound.setAttribute("aria-pressed", String(state.soundEnabled));
+  elements.toggleMusic.textContent = state.musicEnabled ? "배경음악 끄기" : "배경음악 켜기";
+  elements.toggleMusic.setAttribute("aria-pressed", String(state.musicEnabled));
+  elements.toggleSound.classList.toggle("sound-button--off", !state.soundEnabled);
+  elements.toggleMusic.classList.toggle("sound-button--on", state.musicEnabled);
+}
+
+function getAudioContext() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  if (!audioState.context) audioState.context = new AudioContextClass();
+  if (audioState.context.state === "suspended") audioState.context.resume();
+  return audioState.context;
+}
+
+function playTone(frequency, duration = 0.12, delay = 0, type = "sine", volume = 0.035) {
+  const context = getAudioContext();
+  if (!context) return;
+  const start = context.currentTime + delay;
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  oscillator.connect(gain).connect(context.destination);
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.02);
+}
+
+function playEffect(kind = "click") {
+  if (!state.soundEnabled) return;
+  const patterns = {
+    click: [[660, 0.07, 0, "triangle", 0.025]],
+    save: [[523, 0.08, 0], [784, 0.1, 0.08]],
+    move: [[523, 0.08, 0], [659, 0.08, 0.07], [784, 0.1, 0.14]],
+    special: [[784, 0.09, 0], [1047, 0.12, 0.08], [1319, 0.14, 0.17]],
+    finish: [[523, 0.1, 0], [659, 0.1, 0.1], [784, 0.1, 0.2], [1047, 0.18, 0.32]],
+    error: [[220, 0.1, 0, "sawtooth", 0.018], [196, 0.12, 0.1, "sawtooth", 0.016]],
+  };
+  (patterns[kind] || patterns.click).forEach(([frequency, duration, delay, type = "sine", volume = 0.035]) => {
+    playTone(frequency, duration, delay, type, volume);
+  });
+}
+
+function playMusicTick() {
+  if (!state.musicEnabled) return;
+  const melody = [392, 440, 523, 587, 659, 587, 523, 440];
+  const bass = [196, 196, 220, 220, 262, 262, 220, 220];
+  const index = audioState.musicStep % melody.length;
+  playTone(melody[index], 0.18, 0, "sine", 0.018);
+  if (index % 2 === 0) playTone(bass[index], 0.22, 0, "triangle", 0.012);
+  audioState.musicStep += 1;
+}
+
+function startBackgroundMusic() {
+  if (audioState.musicTimer) return;
+  getAudioContext();
+  playMusicTick();
+  audioState.musicTimer = window.setInterval(playMusicTick, 420);
+}
+
+function stopBackgroundMusic() {
+  if (!audioState.musicTimer) return;
+  window.clearInterval(audioState.musicTimer);
+  audioState.musicTimer = null;
+}
+
+function setMusicEnabled(enabled) {
+  state.musicEnabled = enabled;
+  if (enabled) startBackgroundMusic();
+  else stopBackgroundMusic();
+  saveSoundPreferences();
+  updateSoundButtons();
+}
+
+function initializeSound() {
+  loadSoundPreferences();
+  updateSoundButtons();
+  if (state.musicEnabled) {
+    state.musicEnabled = false;
+    saveSoundPreferences();
+    updateSoundButtons();
+  }
 }
 
 function serializeSpecialCells() {
@@ -249,6 +373,7 @@ function addPlayer(name) {
   if (!state.selectedPlayerId) state.selectedPlayerId = player.id;
   elements.playerName.value = "";
   elements.setupMessage.textContent = `${normalized}님을 추가했습니다.`;
+  playEffect("save");
   renderAll();
 }
 
@@ -270,10 +395,12 @@ function moveSelectedPlayer(targetCell) {
   const player = state.players.find((entry) => entry.id === state.selectedPlayerId);
   if (!player) {
     announce("먼저 이동할 참여자를 선택하세요.");
+    playEffect("error");
     return;
   }
   if (player.finished) {
     announce(`${player.name}님은 이미 도착했습니다.`, "warning");
+    playEffect("error");
     return;
   }
 
@@ -285,13 +412,16 @@ function moveSelectedPlayer(targetCell) {
     player.finishedOrder = state.finishOrder.length + 1;
     state.finishOrder.push(player.id);
     announce(`🏁 ${player.name}님이 도착했습니다! 현재 ${player.finishedOrder}위입니다.`, "success");
+    playEffect("finish");
   } else {
     const special = state.specialCells.get(destination);
     if (special) {
       announce(`${player.name}님이 ${destination}번 특별 칸에 도착했습니다. 팝업 내용을 확인하세요.`, "special");
       openSpecialModal(special);
+      playEffect("special");
     } else {
       announce(`${player.name}님이 ${destination}번 칸으로 이동했습니다.`);
+      playEffect("move");
     }
   }
 
@@ -327,6 +457,7 @@ function saveSpecialCell(event) {
   elements.specialForm.reset();
   elements.specialColor.value = "mission";
   announceSpecial(`${cell}번 칸에 '${title}' 특별 칸을 저장했습니다.`);
+  playEffect("save");
   renderBoard();
   renderSpecialList();
 }
@@ -336,22 +467,26 @@ function removeSpecialCell(cell) {
   renderBoard();
   renderSpecialList();
   announceSpecial(`${cell}번 특별 칸을 삭제했습니다.`);
+  playEffect("click");
 }
 
 function startGame() {
   if (state.players.length < 1) {
     elements.setupMessage.textContent = "참여자를 1명 이상 추가해야 시작할 수 있습니다.";
+    playEffect("error");
     return;
   }
   showScreen("board");
   state.selectedPlayerId = state.selectedPlayerId || state.players[0].id;
   renderAll();
   announce("참여자를 선택하고 원하는 칸을 클릭해 이동하세요.");
+  playEffect("save");
 }
 
 function finishGame() {
   renderResults();
   showScreen("result");
+  playEffect("finish");
 }
 
 function resetGame() {
@@ -375,6 +510,7 @@ function restartPositionsOnly() {
   showScreen("board");
   renderAll();
   announce("보드 화면으로 돌아왔습니다.");
+  playEffect("save");
 }
 
 function boardCellsInPathOrder() {
@@ -582,6 +718,21 @@ function bindEvents() {
   elements.clearSpecialConfig.addEventListener("click", clearSpecialConfigStorage);
   elements.exportSpecialConfig.addEventListener("click", exportSpecialConfigToJson);
   elements.importSpecialConfig.addEventListener("change", importSpecialConfigFromJson);
+  elements.toggleSound.addEventListener("click", () => {
+    state.soundEnabled = !state.soundEnabled;
+    saveSoundPreferences();
+    updateSoundButtons();
+    if (state.soundEnabled) playEffect("save");
+  });
+  elements.toggleMusic.addEventListener("click", () => {
+    setMusicEnabled(!state.musicEnabled);
+    if (state.musicEnabled) playEffect("special");
+  });
+  document.addEventListener("click", (event) => {
+    const control = event.target.closest("button, .import-button");
+    if (!control || control.id === "toggle-sound" || control.id === "toggle-music") return;
+    playEffect("click");
+  });
   elements.backToBoard.addEventListener("click", restartPositionsOnly);
   elements.resetGame.addEventListener("click", resetGame);
   elements.specialModalClose.addEventListener("click", closeSpecialModal);
@@ -594,5 +745,6 @@ function bindEvents() {
   });
 }
 
+initializeSound();
 bindEvents();
 renderAll();
