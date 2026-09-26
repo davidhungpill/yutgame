@@ -187,11 +187,13 @@ function playEffect(kind = "click") {
 
 function playMusicTick() {
   if (!state.musicEnabled) return;
-  const melody = [392, 440, 523, 587, 659, 587, 523, 440];
-  const bass = [196, 196, 220, 220, 262, 262, 220, 220];
+  const melody = [523, 659, 784, 659, 880, 784, 659, 587, 659, 784, 988, 880, 784, 659, 587, 523];
+  const sparkle = [1047, null, 1175, null, 1319, null, 1175, null, 1047, null, 1319, null, 1568, null, 1319, null];
+  const bass = [262, 262, 330, 330, 392, 392, 330, 330, 349, 349, 440, 440, 392, 392, 330, 330];
   const index = audioState.musicStep % melody.length;
-  playTone(melody[index], 0.18, 0, "sine", 0.018);
-  if (index % 2 === 0) playTone(bass[index], 0.22, 0, "triangle", 0.012);
+  playTone(melody[index], 0.13, 0, "triangle", 0.02);
+  if (sparkle[index]) playTone(sparkle[index], 0.07, 0.05, "sine", 0.012);
+  if (index % 2 === 0) playTone(bass[index], 0.16, 0, "triangle", 0.011);
   audioState.musicStep += 1;
 }
 
@@ -199,7 +201,7 @@ function startBackgroundMusic() {
   if (audioState.musicTimer) return;
   getAudioContext();
   playMusicTick();
-  audioState.musicTimer = window.setInterval(playMusicTick, 420);
+  audioState.musicTimer = window.setInterval(playMusicTick, 260);
 }
 
 function stopBackgroundMusic() {
